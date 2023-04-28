@@ -1,4 +1,4 @@
-import RestaurantController from "../controllers"
+import RestaurantController from "../controllers/index.js"
 
 export default function restaurant(app) {
     const controller = new RestaurantController()

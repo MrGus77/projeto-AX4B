@@ -13,5 +13,9 @@
         "firebase-debug.*.log"
       ]
     }
-  ]
+  ],
+  "hosting": {
+    "site": "teste-tecnico-ax4b",
+    "public": "public"
+  }
 }
