@@ -1,7 +1,8 @@
 import RestaurantController from "../controllers/index.js"
+import database from '../database/database.js'
 
 export default function restaurant(app) {
-    const controller = new RestaurantController()
+    const controller = new RestaurantController(database)
 
     app.post("/restaurant", controller.createRestaurant)
     app.get("/restaurant", controller.getRestaurants)

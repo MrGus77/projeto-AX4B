@@ -1,37 +1,27 @@
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, child, push, set, update, remove, get } from "firebase/database";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyB2WN06mmL_3lZFgDlHsL9NpASzL_4NUOw",
-    authDomain: "teste-ax4b.firebaseapp.com",
-    projectId: "teste-ax4b",
-    storageBucket: "teste-ax4b.appspot.com",
-    messagingSenderId: "692309120444",
-    appId: "1:692309120444:web:6364280d42d2f70cc987b9"
-};
-
-initializeApp(firebaseConfig);
-
-const database = getDatabase();
-
 export default class RestaurantController {
+    constructor(db) {
+        this.db = db;
+
+        this.getRestaurants = this.getRestaurants.bind(this);
+        this.getRestaurantById = this.getRestaurantById.bind(this);
+        this.updateRestaurant = this.updateRestaurant.bind(this);
+        this.deleteRestaurant = this.deleteRestaurant.bind(this);
+        this.createRestaurant = this.createRestaurant.bind(this);
+        this.getVoteRanking = this.getVoteRanking.bind(this);
+        this.getVoteWinner = this.getVoteWinner.bind(this);
+        this.vote = this.vote.bind(this);
+    }
+
     async getRestaurants(req, res) {
-        const restaurantsRef = ref(database, 'restaurants');
-
         try {
-            const snapshot = await get(restaurantsRef);
-            const restaurants = [];
+            const restaurantRef = this.db.collection('restaurant').doc('BwVLZPHypNCMyKiFiCE9')
+            const doc = await restaurantRef.get();
 
-            snapshot.forEach(childSnapshot => {
-                const restaurant = childSnapshot.val();
-                restaurant.id = childSnapshot.key;
-                restaurants.push(restaurant);
-            });
+            if (!doc.exists) return res.sendStatus(404);
 
-            res.send(restaurants);
+            res.status(200).send(doc.data());
         } catch (error) {
-            console.error(error);
-            res.status(500).send('Error getting restaurants');
+            res.status(500).send(error)
         }
     }
 
@@ -42,7 +32,7 @@ export default class RestaurantController {
 
     updateRestaurant(req, res) {
         const id = req.params.id;
-        res.send(`PATCH restaurant ${id}`);
+        res.send(`PUT restaurant ${id}`);
     }
 
     deleteRestaurant(req, res) {
@@ -51,14 +41,7 @@ export default class RestaurantController {
     }
 
     createRestaurant(req, res) {
-        const { name, code } = req.body;
-
-        const newRestaurantRef = push(ref(database, 'restaurants'), {
-            name,
-            code,
-        });
-
-        res.send(`New restaurant created with ID ${newRestaurantRef.key}`);
+        res.send('POST restaurant');
     }
 
     getVoteRanking(req, res) {
