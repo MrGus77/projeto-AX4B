@@ -9,7 +9,7 @@ export default function restaurant(app) {
     app.patch("/restaurant/:id", controller.updateRestaurant)
     app.delete("/restaurant/:id", controller.deleteRestaurant)
 
-    app.get("/restaurant/voting")
-    app.get("/restaurant/voting/winner")
-    app.post("/restaurant/voting")
+    app.get("/restaurant/voting", controller.getVoteRanking)
+    app.get("/restaurant/voting/winner", controller.getVoteWinner)
+    app.post("/restaurant/voting", controller.vote)
 }
