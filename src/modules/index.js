@@ -1,5 +1,5 @@
-import server from "./server";
-import config from "./config";
+import server from "./server.js";
+import config from "./config.js";
 
 export default function modules(app) {
     config(app);

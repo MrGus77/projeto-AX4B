@@ -1,9 +1,11 @@
 {
   "name": "projeto-ax4b",
+  "type": "module",
   "version": "1.0.0",
   "description": "teste técnico estágio AXB4.",
   "main": "src/index.js",
   "scripts": {
+    "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Gustavo de Oliveira Silva",
