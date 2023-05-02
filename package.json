@@ -5,7 +5,7 @@
   "description": "teste técnico estágio AXB4.",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node --watch src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Gustavo de Oliveira Silva",
