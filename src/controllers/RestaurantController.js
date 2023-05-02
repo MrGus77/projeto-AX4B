@@ -117,7 +117,7 @@ export default class RestaurantController {
     getVoteWinner(req, res) {
         res.send('GET vote winner');
     }
-
+ 
     vote(req, res) {
         res.send('POST vote');
     }
