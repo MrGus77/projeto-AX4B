@@ -1,3 +1,5 @@
+import getmac from 'getmac';
+
 export default class RestaurantController {
     constructor(db) {
         this.db = db;
@@ -11,7 +13,7 @@ export default class RestaurantController {
         this.getVoteWinner = this.getVoteWinner.bind(this);
         this.updateRestaurant = this.updateRestaurant.bind(this);
         this.vote = this.vote.bind(this);
-        this.voteHourRestriction = this.voteHourRestriction.bind(this);
+        this.isVoteAllowed = this.isVoteAllowed.bind(this);
     }
 
     async getRestaurants(req, res) {
@@ -184,7 +186,7 @@ export default class RestaurantController {
         }
     }
 
-    voteHourRestriction(req, res) {
+    isVoteAllowed(req, res) {
         const VOTING_START_HOUR = 9;
         const VOTING_END_HOUR = 11;
         const VOTING_END_MINUTES = 50;
@@ -196,15 +198,23 @@ export default class RestaurantController {
         if (hour < VOTING_START_HOUR ||
             hour > VOTING_END_HOUR ||
             (hour === VOTING_END_HOUR && minutes > VOTING_END_MINUTES)) {
-            return res.status(400).send(`Voting is only allowed between ${VOTING_START_HOUR}:00am and ${VOTING_END_HOUR}:${VOTING_END_MINUTES}am`);
+            return {
+                status: false,
+                message: `Voting is only allowed between ${VOTING_START_HOUR}:00am and ${VOTING_END_HOUR}:${VOTING_END_MINUTES}am`
+            }
         }
+
+        return { status: true }
     }
 
     async vote(req, res) {
         try {
             const { user, restaurant_code } = req.body;
+            const isVoteAllowed = this.isVoteAllowed(req, res);
 
-            this.voteHourRestriction(req, res)
+            if (!isVoteAllowed?.status) {
+                return res.status(400).send(isVoteAllowed?.message);
+            }
 
             if (!user || !restaurant_code) {
                 return res.status(400).send('Missing parameters')
@@ -220,6 +230,7 @@ export default class RestaurantController {
 
             res.status(200).send(`Vote with ID ${id} created successfully`);
         } catch (error) {
+            console.log(error)
             res.status(500).send(error);
         }
     }
