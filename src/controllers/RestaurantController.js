@@ -38,6 +38,11 @@ export default class RestaurantController {
     async getRestaurantById(req, res) {
         try {
             const id = req.params.id;
+
+            if (!id) {
+                return res.status(400).send('Missing id parameter');
+            }
+
             const restaurantRef = this.db.collection('restaurant').doc(id);
             const doc = await restaurantRef.get();
 
@@ -73,6 +78,10 @@ export default class RestaurantController {
             const name = req.body.name;
             const id = await this.getIncrementedId('restaurant', 'code');
 
+            if (!name) {
+                return res.status(400).send('Missing name parameter');
+            }
+
             const restaurantRef = this.db.collection('restaurant')
             const newRestaurant = { code: id, name };
 
@@ -87,6 +96,11 @@ export default class RestaurantController {
     async deleteRestaurant(req, res) {
         try {
             const id = req.params.id;
+
+            if (!id) {
+                return res.status(400).send('Missing id parameter');
+            }
+
             const restaurantRef = this.db.collection('restaurant').doc(id);
 
             await restaurantRef.delete();
@@ -101,6 +115,11 @@ export default class RestaurantController {
         try {
             const id = req.params.id;
             const updateData = req.body;
+
+            if (!id || !updateData) {
+                return res.status(400).send('Missing parameters');
+            }
+
             const restaurantRef = this.db.collection('restaurant').doc(id);
 
             await restaurantRef.update(updateData);
@@ -167,6 +186,10 @@ export default class RestaurantController {
         try {
             const { user, restaurant_code } = req.body;
 
+            if (!user || !restaurant_code) {
+                return res.status(400).send('Missing parameters')
+            }
+
             const date = new Date().getTime();
             const id = await this.getIncrementedId('vote', 'id');
 
@@ -177,7 +200,6 @@ export default class RestaurantController {
 
             res.status(200).send(`Vote with ID ${id} created successfully`);
         } catch (error) {
-            console.log(error)
             res.status(500).send(error);
         }
     }
