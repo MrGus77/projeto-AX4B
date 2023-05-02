@@ -2,14 +2,16 @@ export default class RestaurantController {
     constructor(db) {
         this.db = db;
 
-        this.getRestaurants = this.getRestaurants.bind(this);
-        this.getRestaurantById = this.getRestaurantById.bind(this);
-        this.updateRestaurant = this.updateRestaurant.bind(this);
-        this.deleteRestaurant = this.deleteRestaurant.bind(this);
         this.createRestaurant = this.createRestaurant.bind(this);
+        this.deleteRestaurant = this.deleteRestaurant.bind(this);
+        this.getIncrementedId = this.getIncrementedId.bind(this);
+        this.getRestaurantById = this.getRestaurantById.bind(this);
+        this.getRestaurants = this.getRestaurants.bind(this);
         this.getVoteRanking = this.getVoteRanking.bind(this);
         this.getVoteWinner = this.getVoteWinner.bind(this);
+        this.updateRestaurant = this.updateRestaurant.bind(this);
         this.vote = this.vote.bind(this);
+        this.voteHourRestriction = this.voteHourRestriction.bind(this);
     }
 
     async getRestaurants(req, res) {
@@ -182,9 +184,27 @@ export default class RestaurantController {
         }
     }
 
+    voteHourRestriction(req, res) {
+        const VOTING_START_HOUR = 9;
+        const VOTING_END_HOUR = 11;
+        const VOTING_END_MINUTES = 50;
+
+        const now = new Date();
+        const hour = now.getHours();
+        const minutes = now.getMinutes();
+
+        if (hour < VOTING_START_HOUR ||
+            hour > VOTING_END_HOUR ||
+            (hour === VOTING_END_HOUR && minutes > VOTING_END_MINUTES)) {
+            return res.status(400).send(`Voting is only allowed between ${VOTING_START_HOUR}:00am and ${VOTING_END_HOUR}:${VOTING_END_MINUTES}am`);
+        }
+    }
+
     async vote(req, res) {
         try {
             const { user, restaurant_code } = req.body;
+
+            this.voteHourRestriction(req, res)
 
             if (!user || !restaurant_code) {
                 return res.status(400).send('Missing parameters')
