@@ -25,16 +25,26 @@ export default class RestaurantController {
 
             const restaurants = [];
 
-            snapshot.forEach(doc => {
-                restaurants.push(doc.data());
-            });
+            if (res) {
+                const votedRestaurants = await this.getVoteRanking()
 
+                snapshot.forEach(doc => {
+                    const votes = votedRestaurants?.find(r => r.code === doc.data().code)?.votes || 0;
+                    restaurants.push({ ...doc.data(), votes });
+                });
+            } else {
+                snapshot.forEach(doc => {
+                    restaurants.push(doc.data());
+                });
+            }
+            
             const sortedRestaurants = restaurants.sort((a, b) => b.code - a.code);
 
             if (!res) return sortedRestaurants;
 
             res?.status(200)?.send(sortedRestaurants);
         } catch (error) {
+            console.log(error)
             res?.status(500)?.send(error);
         }
     }
@@ -186,7 +196,7 @@ export default class RestaurantController {
         }
     }
 
-    isVoteAllowed(req, res) {
+    isVoteAllowed() {
         const VOTING_START_HOUR = 9;
         const VOTING_END_HOUR = 11;
         const VOTING_END_MINUTES = 50;
@@ -210,7 +220,7 @@ export default class RestaurantController {
     async vote(req, res) {
         try {
             const { user, restaurant_code } = req.body;
-            const isVoteAllowed = this.isVoteAllowed(req, res);
+            const isVoteAllowed = this.isVoteAllowed();
 
             if (!isVoteAllowed?.status) {
                 return res.status(400).send(isVoteAllowed?.message);
