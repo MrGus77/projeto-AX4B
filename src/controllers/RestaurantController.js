@@ -27,9 +27,11 @@ export default class RestaurantController {
 
             const sortedRestaurants = restaurants.sort((a, b) => b.code - a.code);
 
-            res.status(200).send(sortedRestaurants);
+            if (!res) return sortedRestaurants;
+
+            res?.status(200)?.send(sortedRestaurants);
         } catch (error) {
-            res.status(500).send(error);
+            res?.status(500)?.send(error);
         }
     }
 
@@ -47,30 +49,30 @@ export default class RestaurantController {
         }
     }
 
-    async getIncrementedId() {
+    async getIncrementedId(collection, orderBy) {
         try {
-            const restaurantRef = this.db.collection('restaurant').orderBy('code', 'desc').limit(1);
-            const snapshot = await restaurantRef.get();
+            const ref = this.db.collection(collection).orderBy(orderBy, 'desc').limit(1);
+            const snapshot = await ref.get();
 
             let lastId = 0;
 
             const lastDoc = snapshot?.docs[0];
 
-            lastId = lastDoc ? lastDoc?.data()?.code : lastId;
+            lastId = lastDoc ? Number(lastDoc?.id) : lastId;
 
             const newId = lastId + 1;
 
             return newId;
         } catch (error) {
-            console.log(error);
-            return null;
+            throw new Error(error);
         }
     }
 
     async createRestaurant(req, res) {
         try {
             const name = req.body.name;
-            const id = await this.getIncrementedId();
+            const id = await this.getIncrementedId('restaurant', 'code');
+
             const restaurantRef = this.db.collection('restaurant')
             const newRestaurant = { code: id, name };
 
@@ -78,7 +80,6 @@ export default class RestaurantController {
 
             res.status(200).send(`Restaurant with ID ${id} created successfully`);
         } catch (error) {
-            console.log(error)
             res.status(500).send(error);
         }
     }
@@ -110,15 +111,74 @@ export default class RestaurantController {
         }
     }
 
-    getVoteRanking(req, res) {
-        res.send('GET vote ranking');
+    async getVoteRanking(req, res) {
+        try {
+            const voteRef = this.db.collection('vote');
+            const snapshot = await voteRef.get();
+
+            if (snapshot.empty) return res.sendStatus(404);
+
+            const votes = [];
+
+            snapshot.forEach(doc => {
+                votes.push(doc.data().restaurant_code);
+            });
+
+            const restaurants = await this.getRestaurants()
+
+            const votesCount = {};
+
+            for (const vote of votes) {
+                const restaurant = restaurants?.find(r => r.code === vote)
+
+                if (!restaurant) continue;
+
+                const { name, code } = restaurant;
+
+                if (!votesCount[name]) votesCount[name] = { votes: 1, code };
+                else votesCount[name].votes++;
+            }
+
+            const votesArray = Object.entries(votesCount)
+                .map(([name, { votes, code }]) => ({ code, name, votes }))
+                .sort((a, b) => b.votes - a.votes);
+
+            if (!res) return votesArray;
+
+            res?.status(200).send(votesArray);
+        } catch (error) {
+            res?.status(500).send(error);
+        }
     }
 
-    getVoteWinner(req, res) {
-        res.send('GET vote winner');
+    async getVoteWinner(req, res) {
+        try {
+            const ranking = await this.getVoteRanking();
+
+            if (!ranking?.length) return res.sendStatus(404);
+
+            res.status(200).send(ranking[0]);
+        } catch (error) {
+            res.status(500).send(error);
+        }
     }
- 
-    vote(req, res) {
-        res.send('POST vote');
+
+    async vote(req, res) {
+        try {
+            const { user, restaurant_code } = req.body;
+
+            const date = new Date().getTime();
+            const id = await this.getIncrementedId('vote', 'id');
+
+            const voteRef = this.db.collection('vote')
+            const newVote = { date, user, restaurant_code, id };
+
+            await voteRef.doc(String(id)).set(newVote);
+
+            res.status(200).send(`Vote with ID ${id} created successfully`);
+        } catch (error) {
+            console.log(error)
+            res.status(500).send(error);
+        }
     }
 }
